@@ -4,20 +4,42 @@ using UnityEngine;
 
 public class GunObject : MonoBehaviour
 {
+    public GameObject bulletObject; // 총알 프리팹
     public Transform playerTransform;
+    public Transform firePoint; // 총알이 발사될 위치 (총구)
+    public float bulletSpeed = 20f; // 총알의 속도
     public bool bIsPlayer;
+    public bool bIsShotOn;
     void Start()
     {
-        playerTransform = transform.parent.GetChild(0).gameObject.GetComponent<Transform>();
-        bIsPlayer = false;
+        Setting();
     }
-
     
     void Update()
     {
-        if (bIsPlayer) 
+        if (bIsPlayer)
         {
             RotateGunTowardsMouse();
+
+            // 스페이스바를 눌렀을 때 총알 발사
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                Shoot();
+            }
+        }
+    }
+
+    public void Setting() 
+    {
+        playerTransform = transform.parent.gameObject.GetComponent<Transform>();
+        if (playerTransform.gameObject.GetComponent<PlayerScript>().gameType == eGameCharacterType.Enemy)
+        {
+            bIsPlayer = false;
+            bIsShotOn = false;
+        }
+        else if(playerTransform.gameObject.GetComponent<PlayerScript>().gameType == eGameCharacterType.PLAYER)
+        {
+            bIsPlayer = true;
         }
     }
 
@@ -32,7 +54,6 @@ public class GunObject : MonoBehaviour
 
         // 각도 계산
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-
 
         Vector3 player = mousePosition - playerTransform.position;
 
@@ -49,5 +70,31 @@ public class GunObject : MonoBehaviour
         // 회전 적용
         transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
 
+    }
+    void Shoot()
+    {
+        // 총알을 생성하고 발사하는 메서드
+        GameObject bullet = Instantiate(bulletObject, firePoint.position, firePoint.rotation);
+        Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
+
+        // 총알에 힘을 가해 발사
+        rb.velocity = firePoint.right * bulletSpeed;
+
+        if (!bIsPlayer)
+        {
+            bIsShotOn = false;
+        }
+    }
+
+
+    public void UpdateFromNetworkGunObject(float rotatinZ, float scaleX, bool shotOn)
+    {
+        transform.rotation = Quaternion.Euler(new Vector3(0, 0, rotatinZ));
+        transform.localScale = new Vector3(scaleX, scaleX, 1);
+
+        if (shotOn)
+        {
+            Shoot(); // 즉시 총알 발사
+        }
     }
 }

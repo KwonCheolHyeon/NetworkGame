@@ -16,7 +16,7 @@ public class DeadPlayer : ICharacterState
 
     public void UpdateState(PlayerScript character)
     {
-
+        
     }
 
     public void FixedUpdateState(PlayerScript character)

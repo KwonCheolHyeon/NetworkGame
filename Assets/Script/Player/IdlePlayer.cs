@@ -18,10 +18,21 @@ public class IdlePlayer : ICharacterState
 
     public void UpdateState(PlayerScript character)
     {
-        if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0)
+        if (character.gameType == eGameCharacterType.PLAYER)
         {
-            character.SetState(character.movingState);
+            if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0)
+            {
+                character.SetState(character.movingState);
+            }
         }
+        else 
+        {
+            if (character.mPrevVector != character.transform.position)//움직이는 중
+            {
+                character.SetState(character.movingState);
+            }
+        }
+        
     }
 
     public void FixedUpdateState(PlayerScript character) 

@@ -25,7 +25,7 @@ public class CameraScript : MonoBehaviour
         }
     }
 
-    void SettingTarger(GameObject gameObject) 
+    public void SettingTarger(GameObject gameObject) 
     {
         targetPlayer = gameObject;
         offset = transform.position - targetPlayer.transform.position;

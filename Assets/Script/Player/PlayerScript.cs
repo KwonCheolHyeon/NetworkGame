@@ -1,5 +1,7 @@
+using Goldmetal.UndeadSurvivor;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class PlayerScript : MonoBehaviour
@@ -11,17 +13,29 @@ public class PlayerScript : MonoBehaviour
     public eGameCharacterType gameType { get; private set; }
     public Rigidbody2D rb;
     public Animator animator;
-    void Start()
+    public int playerHp;
+    //상대방일 경우
+    public Vector3 mPrevVector;
+    private Vector3 mTargetPosition;
+
+    private void Awake()
     {
+        gameType = eGameCharacterType.PLAYER;
+        playerHp = 100;
         animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
+        
+    }
+    void Start()
+    {
+        
         SetState(idleState);
     }
 
 
     void Update()
     {
-        if (gameType == eGameCharacterType.PLAYER ) 
+        if (gameType == eGameCharacterType.PLAYER)
         {
             HandleInput();
         }
@@ -34,14 +48,22 @@ public class PlayerScript : MonoBehaviour
 
     private void FixedUpdate()
     {
+        
+        if (gameType == eGameCharacterType.Enemy)
+        {
+            mPrevVector = transform.position;
+            transform.position = Vector2.Lerp(transform.position, mTargetPosition, Time.deltaTime * 10);
+        }
         currentState.FixedUpdateState(this);
     }
 
     private void LateUpdate()
     {
-        RotatePlayerTowardsMouse();
+        if (gameType == eGameCharacterType.PLAYER) 
+        {
+            RotatePlayerTowardsMouse();
+        }
     }
-
     public void SetPlayerType()
     {
         gameType = eGameCharacterType.PLAYER;
@@ -69,17 +91,14 @@ public class PlayerScript : MonoBehaviour
             SetState(idleState);
         }
     }
-
+    
     private void RotatePlayerTowardsMouse()
     {
-        // 마우스의 월드 좌표 얻기
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mousePosition.z = 0f; // z축 값이 필요 없으므로 0으로 설정
 
-        // 플레이어와 마우스 사이의 거리 계산
         Vector3 direction = mousePosition - transform.position;
 
-        // 마우스가 플레이어 오른쪽에 있으면 정방향, 왼쪽에 있으면 반대 방향으로 회전
         if (direction.x > 0)
         {
             transform.localScale = new Vector3(1, 1, 1); // 오른쪽을 향함
@@ -88,5 +107,21 @@ public class PlayerScript : MonoBehaviour
         {
             transform.localScale = new Vector3(-1, 1, 1); // 왼쪽을 향함
         }
+    }
+
+    public void TakeDamage() 
+    {
+        playerHp -= 10;
+        if (playerHp <= 0) 
+        {
+            SetState(deadState);
+        }
+    }
+
+    public void UpdateFromNetworkPlayer(float x, float y, float scaleX, int hp)
+    {
+        mTargetPosition = new Vector3(x, y, 0);
+        transform.localScale = new Vector3(scaleX, 1, 0);
+        playerHp = hp;
     }
 }

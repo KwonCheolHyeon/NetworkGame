@@ -19,7 +19,19 @@ public class MovingPlayer : ICharacterState
 
     public void UpdateState(PlayerScript character)
     {
-        HandleInput(character);
+        if (character.gameType == eGameCharacterType.PLAYER)
+        {
+            HandleInput(character);
+        }
+        else
+        {
+            if (character.mPrevVector == character.transform.position) //이전과 현위치가 같으면 정지 상태
+            {
+                character.SetState(character.idleState);
+            }
+        }
+
+       
     }
 
     public void FixedUpdateState(PlayerScript character)
