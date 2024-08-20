@@ -58,7 +58,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void SpawnOtherPlayer()
+    public void SpawnOtherPlayer(int id)
     {
         // 다른 플레이어 소환
         if (spawnIndex < playerSpawnTransform.Count)
