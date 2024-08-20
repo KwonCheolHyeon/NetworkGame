@@ -11,13 +11,13 @@ public class PlayerScript : MonoBehaviour
     public ICharacterState movingState = new MovingPlayer();
     public ICharacterState deadState = new DeadPlayer();
     public eGameCharacterType gameType { get; private set; }
-    public int playerID { get; private set; }
     public Rigidbody2D rb;
     public Animator animator;
     public int playerHp;
     //상대방일 경우
     public Vector3 mPrevVector;
     private Vector3 mTargetPosition;
+
     private void Awake()
     {
         gameType = eGameCharacterType.PLAYER;
@@ -123,10 +123,5 @@ public class PlayerScript : MonoBehaviour
         mTargetPosition = new Vector3(x, y, 0);
         transform.localScale = new Vector3(scaleX, 1, 0);
         playerHp = hp;
-    }
-
-    public void SetPlayerID(int id) 
-    {
-        playerID = id;
     }
 }
