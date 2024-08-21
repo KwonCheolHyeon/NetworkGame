@@ -28,8 +28,11 @@ public class GameManager : MonoBehaviour
     public GameObject playerPrefab; // 플레이어 프리팹
     public GameObject otherPlayerPrefab; // 다른 플레이어 프리팹
 
-    public GameObject player; // 로컬 플레이어
-    public List<GameObject> otherPlayer = new List<GameObject>(); // 다른 플레이어 리스트
+    public PlayerScript playerScript; // 로컬 플레이어
+    public GunObject playerGun; // 로컬 플레이어
+
+    public List<PlayerScript> otherPlayer = new List<PlayerScript>(); // 다른 플레이어 리스트
+    public List<GunObject> otherPlayerGun = new List<GunObject>(); // 다른 플레이어 리스트
     public List<Transform> playerSpawnTransform; // 스폰 위치 리스트
     public CameraScript cameraObject; // 카메라 스크립트
 
@@ -48,13 +51,21 @@ public class GameManager : MonoBehaviour
         {
             SettingCamera();
         }
+
+        if (mbIsFirstSetting) 
+        {
+            SendPlayerDataToNetwork();
+        }
     }
     public void SettingPlayer()
     {
         // 로컬 플레이어 소환
-        if (player == null && spawnIndex < playerSpawnTransform.Count)
+        if (playerScript == null && spawnIndex < playerSpawnTransform.Count)
         {
-            player = Instantiate(playerPrefab, playerSpawnTransform[spawnIndex].position, Quaternion.identity);
+            GameObject player = Instantiate(playerPrefab, playerSpawnTransform[spawnIndex].position, Quaternion.identity);
+            playerScript = player.GetComponent<PlayerScript>();
+            playerGun = player.transform.GetChild(0).gameObject.GetComponent<GunObject>();
+
             spawnIndex++; 
         }
     }
@@ -65,8 +76,10 @@ public class GameManager : MonoBehaviour
         if (spawnIndex < playerSpawnTransform.Count)
         {
             GameObject newOtherPlayer = Instantiate(otherPlayerPrefab, playerSpawnTransform[spawnIndex].position, Quaternion.identity);
-            newOtherPlayer.AddComponent<PlayerScript>();
-            otherPlayer.Add(newOtherPlayer);
+            PlayerScript pScript = newOtherPlayer.AddComponent<PlayerScript>();
+            GunObject gScript = newOtherPlayer.transform.GetChild(0).gameObject.GetComponent<GunObject>();
+            otherPlayer.Add(pScript);
+            otherPlayerGun.Add(gScript);
             spawnIndex++; // 다음 스폰 위치로 이동
         }
         else
@@ -105,13 +118,42 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void PlayerSYNC() 
+    public void PlayerSYNC(int playerId, float transformX, float transformY, float scaleX, float gunRotationZ, int playerHp, bool mIsShotOn) 
     {
-        //여기서 플레이어를 제외한 적들의 움직임을 제어
+        for (int index = 0; index < otherPlayer.Count; index++) 
+        {
+            if (otherPlayer[index].playerID == playerId) 
+            {
+                otherPlayer[index].UpdateFromNetworkPlayer(transformX, transformY, scaleX, playerHp);
+                otherPlayerGun[index].UpdateFromNetworkGunObject(gunRotationZ, scaleX, mIsShotOn);
+            }
+        }
+    }
+
+    public void SendPlayerDataToNetwork() 
+    {
+        float transformX = playerScript.transform.position.x;
+        float transformY = playerScript.transform.position.y;
+        float scaleX = playerScript.transform.localScale.x;
+        float gunRotationZ = playerGun.transform.rotation.z;
+        int playerHp = playerScript.playerHp;
+        bool shotOn = false;
+        NetworkManager.Instance.SendMovementData(transformX, transformY, scaleX, gunRotationZ, playerHp, shotOn);
+    }
+
+    public void SendPlayerDataToNetworkShot()
+    {
+        float transformX = playerScript.transform.position.x;
+        float transformY = playerScript.transform.position.y;
+        float scaleX = playerScript.transform.localScale.x;
+        float gunRotationZ = playerGun.transform.rotation.z;
+        int playerHp = playerScript.playerHp;
+        bool shotOn = true;
+        NetworkManager.Instance.SendMovementData(transformX, transformY, scaleX, gunRotationZ, playerHp, shotOn);
     }
 
     public void SettingCamera() 
     {
-        cameraObject.SettingTarger(player);
+        cameraObject.SettingTarger(playerScript.gameObject);
     }
 }

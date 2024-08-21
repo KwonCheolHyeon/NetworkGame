@@ -14,9 +14,11 @@ public class PlayerScript : MonoBehaviour
     public Rigidbody2D rb;
     public Animator animator;
     public int playerHp;
+    public int playerID { get; private set; }
     //상대방일 경우
     public Vector3 mPrevVector;
     private Vector3 mTargetPosition;
+
 
     private void Awake()
     {
@@ -123,5 +125,10 @@ public class PlayerScript : MonoBehaviour
         mTargetPosition = new Vector3(x, y, 0);
         transform.localScale = new Vector3(scaleX, 1, 0);
         playerHp = hp;
+    }
+
+    public void SetPlayerID(int playerid) 
+    {
+        playerID = playerid;
     }
 }

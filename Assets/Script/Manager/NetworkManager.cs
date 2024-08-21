@@ -69,7 +69,6 @@ public class NetworkManager : MonoBehaviour
 
     private void Update()
     {
-        SendMovementData();
 
         // Listen for data from server
         if (stream.DataAvailable)
@@ -93,8 +92,15 @@ public class NetworkManager : MonoBehaviour
         }
     }
 
-    private void SendMovementData()
+    public void SendMovementData(float tranformX, float transformY, float ScaleX, float GunRotationZ,int playerHp, bool shot)
     {
+        mTransformX = tranformX;
+        mTransformY = transformY;
+        mScaleX = ScaleX;
+        mGunRotationZ = GunRotationZ;
+        mPlayerHp = playerHp;
+        bmIsShotOn = shot;
+
         byte[] message = new byte[28];
         Buffer.BlockCopy(BitConverter.GetBytes(playerId), 0, message, 0, 4);
         Buffer.BlockCopy(BitConverter.GetBytes(mTransformX), 0, message, 4, 4);
@@ -117,14 +123,7 @@ public class NetworkManager : MonoBehaviour
         int playerHp = BitConverter.ToInt32(buffer, 20);
         bool mIsShotOn = BitConverter.ToBoolean(buffer, 24);
 
-
-        UpdateOtherPlayerPosition(receivedPlayerId, receivedX, receivedY, receivedScale, gunRotationZ, playerHp, mIsShotOn);
-
-    }
-
-    private void UpdateOtherPlayerPosition(int playerId, float transformX, float transformY, float scaleX, float gunRotationZ, int playerHp, bool mIsShotOn)
-    {
-        //playerId를 통해 저장된 각 오브젝트들을 동기화 할 예정
+        GameManager.Instance.PlayerSYNC(receivedPlayerId, receivedX, receivedY, receivedScale, gunRotationZ, playerHp, mIsShotOn);
     }
 
     private void OnApplicationQuit()

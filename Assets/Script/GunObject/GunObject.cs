@@ -25,6 +25,7 @@ public class GunObject : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 Shoot();
+                GameManager.Instance.SendPlayerDataToNetworkShot();
             }
         }
     }
