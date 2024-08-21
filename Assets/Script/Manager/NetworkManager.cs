@@ -34,14 +34,26 @@ public class NetworkManager : MonoBehaviour
     private NetworkStream stream;
     private int playerId;
 
+    private bool bmIsStart;
+
     private float mTransformX, mTransformY, mScaleX, mGunRotationZ;
     private int mPlayerHp;
     private bool bmIsShotOn;
 
+   
 
     private void Start()
     {
-        ConnectToServer();
+        bmIsStart = false;
+    }
+
+    public void ConnetStart() 
+    {
+        if(!bmIsStart) 
+        {
+            bmIsStart = true;
+            ConnectToServer();
+        }
     }
 
     private void ConnectToServer()
@@ -63,13 +75,15 @@ public class NetworkManager : MonoBehaviour
         if (stream.DataAvailable)
         {
             byte[] buffer = new byte[1024];
-            int bytesRead = stream.Read(buffer, 0, buffer.Length);
-            string serverMessage = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            //int bytesRead = stream.Read(buffer, 0, buffer.Length);
+            //string serverMessage = Encoding.ASCII.GetString(buffer, 0, bytesRead);
 
-            if (serverMessage.StartsWith("Player"))
+            int discriminationCode = BitConverter.ToInt32(buffer, 0);
+            int receivedPlayerId = BitConverter.ToInt32(buffer, 4);
+
+            if (discriminationCode == 99)//99를 받으면 접속 했다는 코드
             {
-                //플레이어가 접속하면 정보를 받고 다른플레이어 소환 하는 매서드 작성 예정
-                Debug.Log(serverMessage); 
+                GameManager.Instance.PlayerSetting(receivedPlayerId);
             }
             else
             {

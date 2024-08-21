@@ -34,9 +34,12 @@ public class GameManager : MonoBehaviour
     public CameraScript cameraObject; // 카메라 스크립트
 
     private int spawnIndex = 0; // 현재 사용 중인 스폰 위치 인덱스
+    private bool mbIsFirstSetting;
     void Start()
     {
+        mbIsFirstSetting = false;
         cameraObject = Camera.main.GetComponent<CameraScript>();
+        NetworkManager.Instance.ConnetStart();
     }
 
     void Update()
@@ -45,16 +48,14 @@ public class GameManager : MonoBehaviour
         {
             SettingCamera();
         }
-
     }
-
     public void SettingPlayer()
     {
         // 로컬 플레이어 소환
         if (player == null && spawnIndex < playerSpawnTransform.Count)
         {
             player = Instantiate(playerPrefab, playerSpawnTransform[spawnIndex].position, Quaternion.identity);
-            spawnIndex++; // 다음 스폰 위치로 이동
+            spawnIndex++; 
         }
     }
 
@@ -64,6 +65,7 @@ public class GameManager : MonoBehaviour
         if (spawnIndex < playerSpawnTransform.Count)
         {
             GameObject newOtherPlayer = Instantiate(otherPlayerPrefab, playerSpawnTransform[spawnIndex].position, Quaternion.identity);
+            newOtherPlayer.AddComponent<PlayerScript>();
             otherPlayer.Add(newOtherPlayer);
             spawnIndex++; // 다음 스폰 위치로 이동
         }
@@ -71,6 +73,41 @@ public class GameManager : MonoBehaviour
         {
             Debug.LogWarning("모든 스폰 위치가 사용되었습니다.");
         }
+    }
+
+    public void PlayerSetting(int playerID) 
+    {
+        if (mbIsFirstSetting)
+        {
+            if (playerID == 0)
+            {
+                SettingPlayer(); 
+            }
+            else
+            {
+                for (int index = 0; index < playerID; index++)
+                {
+                    if (index == playerID - 1)
+                    {
+                        SettingPlayer(); 
+                    }
+                    else
+                    {
+                        SpawnOtherPlayer();
+                    }
+                }
+            }
+            mbIsFirstSetting = false;
+        }
+        else 
+        {
+            SpawnOtherPlayer();
+        }
+    }
+
+    public void PlayerSYNC() 
+    {
+        //여기서 플레이어를 제외한 적들의 움직임을 제어
     }
 
     public void SettingCamera() 
