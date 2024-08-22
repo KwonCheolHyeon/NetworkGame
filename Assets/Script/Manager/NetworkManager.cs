@@ -65,9 +65,22 @@ public class NetworkManager : MonoBehaviour
         stream.Read(playerIdBytes, 0, playerIdBytes.Length);
 
         int discriminationCode = BitConverter.ToInt32(playerIdBytes, 0);
+        if (discriminationCode != 99) 
+        {
+            Debug.LogError($"{discriminationCode} ConnectToServer() discriminationCode값이 다르다");
+        }
+       
         playerId = BitConverter.ToInt32(playerIdBytes, 4);
-        GameManager.Instance.PlayerSetting(playerId);
-        Debug.Log("연결 player ID: " + playerId);
+        if (playerId < 5)
+        {
+            Debug.Log($"{playerId} ConnectToServer() PlayerSetting playerId값");
+            GameManager.Instance.PlayerSetting(playerId);
+        }
+        else 
+        {
+            Debug.LogError($"{playerId} ConnectToServer() playerId값 오류");
+        }
+       
     }
 
     private void Update()

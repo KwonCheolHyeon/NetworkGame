@@ -10,6 +10,7 @@ public class GunObject : MonoBehaviour
     public float bulletSpeed = 20f; // 총알의 속도
     public bool bIsPlayer;
     public bool bIsShotOn;
+    public float gunAngle;
     void Start()
     {
         Setting();
@@ -54,7 +55,7 @@ public class GunObject : MonoBehaviour
         Vector2 direction = mousePosition - transform.position;
 
         // 각도 계산
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        gunAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
 
         Vector3 player = mousePosition - playerTransform.position;
 
@@ -69,7 +70,7 @@ public class GunObject : MonoBehaviour
         }
 
         // 회전 적용
-        transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
+        transform.rotation = Quaternion.Euler(new Vector3(0, 0, gunAngle));
 
     }
     void Shoot()

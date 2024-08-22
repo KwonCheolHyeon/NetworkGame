@@ -52,7 +52,7 @@ public class GameManager : MonoBehaviour
             SettingCamera();
         }
 
-        if (playerScript.gameType == eGameCharacterType.PLAYER) 
+        if (playerScript != null && playerScript.gameType == eGameCharacterType.PLAYER)
         {
             SendPlayerDataToNetwork();
         }
@@ -142,7 +142,7 @@ public class GameManager : MonoBehaviour
         float transformX = playerScript.transform.position.x;
         float transformY = playerScript.transform.position.y;
         float scaleX = playerScript.transform.localScale.x;
-        float gunRotationZ = playerGun.transform.rotation.z;
+        float gunRotationZ = playerGun.gunAngle;
         int playerHp = playerScript.playerHp;
         bool shotOn = false;
         NetworkManager.Instance.SendMovementData(transformX, transformY, scaleX, gunRotationZ, playerHp, shotOn);
@@ -153,7 +153,7 @@ public class GameManager : MonoBehaviour
         float transformX = playerScript.transform.position.x;
         float transformY = playerScript.transform.position.y;
         float scaleX = playerScript.transform.localScale.x;
-        float gunRotationZ = playerGun.transform.rotation.z;
+        float gunRotationZ = playerGun.gunAngle;
         int playerHp = playerScript.playerHp;
         bool shotOn = true;
         NetworkManager.Instance.SendMovementData(transformX, transformY, scaleX, gunRotationZ, playerHp, shotOn);
