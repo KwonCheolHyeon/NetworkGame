@@ -61,34 +61,41 @@ public class NetworkManager : MonoBehaviour
         client = new TcpClient(IPandPort.MyIpAddress, IPandPort.MyPortNum);
         stream = client.GetStream();
 
-        byte[] playerIdBytes = new byte[4];
+        byte[] playerIdBytes = new byte[8];
         stream.Read(playerIdBytes, 0, playerIdBytes.Length);
-        playerId = BitConverter.ToInt32(playerIdBytes, 0);
+
+        int discriminationCode = BitConverter.ToInt32(playerIdBytes, 0);
+        playerId = BitConverter.ToInt32(playerIdBytes, 4);
+        GameManager.Instance.PlayerSetting(playerId);
         Debug.Log("연결 player ID: " + playerId);
     }
 
     private void Update()
     {
 
-        // Listen for data from server
-        if (stream.DataAvailable)
+        if (stream != null && stream.DataAvailable)
         {
             byte[] buffer = new byte[1024];
-            //int bytesRead = stream.Read(buffer, 0, buffer.Length);
-            //string serverMessage = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            int bytesRead = stream.Read(buffer, 0, buffer.Length);
 
+
+            if (bytesRead == 0) return;
+   
             int discriminationCode = BitConverter.ToInt32(buffer, 0);
             int receivedPlayerId = BitConverter.ToInt32(buffer, 4);
 
-            if (discriminationCode == 99)//99를 받으면 접속 했다는 코드
+
+            if (discriminationCode == 99) // 99를 받으면 접속 했다는 코드
             {
+                Debug.Log($"{receivedPlayerId} 플레이어 접속");
                 GameManager.Instance.PlayerSetting(receivedPlayerId);
             }
             else
             {
-              
                 ReceiveMovementData(buffer);
+                Debug.Log($"연결확인 3{discriminationCode} discriminationCode");
             }
+           
         }
     }
 
@@ -108,13 +115,14 @@ public class NetworkManager : MonoBehaviour
         Buffer.BlockCopy(BitConverter.GetBytes(mScaleX), 0, message, 12, 4);
         Buffer.BlockCopy(BitConverter.GetBytes(mGunRotationZ), 0, message, 16, 4);
         Buffer.BlockCopy(BitConverter.GetBytes(mPlayerHp), 0, message, 20, 4);
-        Buffer.BlockCopy(BitConverter.GetBytes(bmIsShotOn), 0, message, 24, 4);
+        message[24] = bmIsShotOn ? (byte)1 : (byte)0;
 
         stream.Write(message, 0, message.Length);
     }
 
     private void ReceiveMovementData(byte[] buffer)
     {
+       
         int receivedPlayerId = BitConverter.ToInt32(buffer, 0);
         float receivedX = BitConverter.ToSingle(buffer, 4);
         float receivedY = BitConverter.ToSingle(buffer, 8);
@@ -122,6 +130,8 @@ public class NetworkManager : MonoBehaviour
         float gunRotationZ = BitConverter.ToSingle(buffer, 16);
         int playerHp = BitConverter.ToInt32(buffer, 20);
         bool mIsShotOn = BitConverter.ToBoolean(buffer, 24);
+
+        Debug.Log($"receivedPlayerId : {receivedPlayerId}, receivedX : {receivedX}, receivedY : {receivedY}, receivedScale : {receivedScale}, gunRotationZ : {gunRotationZ}, mIsShotOn : {mIsShotOn}");
 
         GameManager.Instance.PlayerSYNC(receivedPlayerId, receivedX, receivedY, receivedScale, gunRotationZ, playerHp, mIsShotOn);
     }

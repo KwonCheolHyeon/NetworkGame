@@ -40,7 +40,7 @@ public class GameManager : MonoBehaviour
     private bool mbIsFirstSetting;
     void Start()
     {
-        mbIsFirstSetting = false;
+        mbIsFirstSetting = true;
         cameraObject = Camera.main.GetComponent<CameraScript>();
         NetworkManager.Instance.ConnetStart();
     }
@@ -52,10 +52,11 @@ public class GameManager : MonoBehaviour
             SettingCamera();
         }
 
-        if (mbIsFirstSetting) 
+        if (playerScript.gameType == eGameCharacterType.PLAYER) 
         {
             SendPlayerDataToNetwork();
         }
+
     }
     public void SettingPlayer()
     {
@@ -64,10 +65,13 @@ public class GameManager : MonoBehaviour
         {
             GameObject player = Instantiate(playerPrefab, playerSpawnTransform[spawnIndex].position, Quaternion.identity);
             playerScript = player.GetComponent<PlayerScript>();
+            playerScript.SetPlayerID(spawnIndex);
             playerGun = player.transform.GetChild(0).gameObject.GetComponent<GunObject>();
 
             spawnIndex++; 
         }
+
+        SettingCamera();
     }
 
     public void SpawnOtherPlayer()
@@ -77,7 +81,10 @@ public class GameManager : MonoBehaviour
         {
             GameObject newOtherPlayer = Instantiate(otherPlayerPrefab, playerSpawnTransform[spawnIndex].position, Quaternion.identity);
             PlayerScript pScript = newOtherPlayer.AddComponent<PlayerScript>();
+            pScript.SetEnemySetting();
+            pScript.SetPlayerID(spawnIndex);
             GunObject gScript = newOtherPlayer.transform.GetChild(0).gameObject.GetComponent<GunObject>();
+            gScript.Setting();
             otherPlayer.Add(pScript);
             otherPlayerGun.Add(gScript);
             spawnIndex++; // 다음 스폰 위치로 이동
@@ -98,9 +105,9 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                for (int index = 0; index < playerID; index++)
+                for (int index = 0; index <= playerID; index++)
                 {
-                    if (index == playerID - 1)
+                    if (index == playerID)
                     {
                         SettingPlayer(); 
                     }

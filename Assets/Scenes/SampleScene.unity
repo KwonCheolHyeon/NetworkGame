@@ -445,8 +445,10 @@ MonoBehaviour:
     type: 3}
   otherPlayerPrefab: {fileID: 9147711706872135989, guid: 01d76ddccf38ced4e97c2d0dbaaa67f0,
     type: 3}
-  player: {fileID: 0}
+  playerScript: {fileID: 0}
+  playerGun: {fileID: 0}
   otherPlayer: []
+  otherPlayerGun: []
   playerSpawnTransform:
   - {fileID: 177331329}
   - {fileID: 719825102}
@@ -3889,7 +3891,7 @@ TilemapCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}

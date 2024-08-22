@@ -131,4 +131,9 @@ public class PlayerScript : MonoBehaviour
     {
         playerID = playerid;
     }
+
+    public void SetEnemySetting() 
+    {
+        gameType = eGameCharacterType.Enemy;
+    }
 }

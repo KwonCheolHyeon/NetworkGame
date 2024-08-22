@@ -28,6 +28,8 @@ public class CameraScript : MonoBehaviour
     public void SettingTarger(GameObject gameObject) 
     {
         targetPlayer = gameObject;
+        Vector3 camera = new Vector3(targetPlayer.transform.position.x, targetPlayer.transform.position.y, -10.0f);
+        transform.position = camera;
         offset = transform.position - targetPlayer.transform.position;
     }
 }
