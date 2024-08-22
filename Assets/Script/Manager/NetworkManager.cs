@@ -62,25 +62,36 @@ public class NetworkManager : MonoBehaviour
         stream = client.GetStream();
 
         byte[] playerIdBytes = new byte[8];
-        stream.Read(playerIdBytes, 0, playerIdBytes.Length);
+        int totalBytesRead = 0;
+        while (totalBytesRead < playerIdBytes.Length)
+        {
+            int bytesRead = stream.Read(playerIdBytes, totalBytesRead, playerIdBytes.Length - totalBytesRead);
+            if (bytesRead == 0)
+            {
+                
+                Debug.LogError("ConnectToServer 잘못된 데이터");
+                return;
+            }
+            totalBytesRead += bytesRead;
+        }
 
         int discriminationCode = BitConverter.ToInt32(playerIdBytes, 0);
-        if (discriminationCode != 99) 
-        {
-            Debug.LogError($"{discriminationCode} ConnectToServer() discriminationCode값이 다르다");
-        }
-       
         playerId = BitConverter.ToInt32(playerIdBytes, 4);
+
+        if (discriminationCode != 99)
+        {
+            Debug.LogError($"discriminationCode : {discriminationCode}  playerId : {playerId}ConnectToServer() discriminationCode값이 다르다");
+        }
+
         if (playerId < 5)
         {
             Debug.Log($"{playerId} ConnectToServer() PlayerSetting playerId값");
             GameManager.Instance.PlayerSetting(playerId);
         }
-        else 
+        else
         {
             Debug.LogError($"{playerId} ConnectToServer() playerId값 오류");
         }
-       
     }
 
     private void Update()

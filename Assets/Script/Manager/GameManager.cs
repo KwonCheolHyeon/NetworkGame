@@ -38,6 +38,13 @@ public class GameManager : MonoBehaviour
 
     private int spawnIndex = 0; // 현재 사용 중인 스폰 위치 인덱스
     private bool mbIsFirstSetting;
+
+    private float mLastTransformX;
+    private float mLastTransformY;
+    private float mLastScaleX;
+    private float mLastGunRotationZ;
+    private int mLastPlayerHp;
+    private bool mLastShotOn;
     void Start()
     {
         mbIsFirstSetting = true;
@@ -52,7 +59,7 @@ public class GameManager : MonoBehaviour
             SettingCamera();
         }
 
-        if (playerScript != null && playerScript.gameType == eGameCharacterType.PLAYER)
+        if (playerScript != null && playerScript.gameType == eGameCharacterType.PLAYER && otherPlayer.Count != 0)
         {
             SendPlayerDataToNetwork();
         }
@@ -137,7 +144,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void SendPlayerDataToNetwork() 
+    public void SendPlayerDataToNetwork()
     {
         float transformX = playerScript.transform.position.x;
         float transformY = playerScript.transform.position.y;
@@ -145,7 +152,21 @@ public class GameManager : MonoBehaviour
         float gunRotationZ = playerGun.gunAngle;
         int playerHp = playerScript.playerHp;
         bool shotOn = false;
-        NetworkManager.Instance.SendMovementData(transformX, transformY, scaleX, gunRotationZ, playerHp, shotOn);
+
+        // 이전 상태와 현재 상태를 비교하여 변경된 경우에만 데이터를 전송
+        if (transformX != mLastTransformX || transformY != mLastTransformY || scaleX != mLastScaleX ||
+            gunRotationZ != mLastGunRotationZ || playerHp != mLastPlayerHp || shotOn != mLastShotOn)
+        {
+            NetworkManager.Instance.SendMovementData(transformX, transformY, scaleX, gunRotationZ, playerHp, shotOn);
+
+            // 이전 상태 업데이트
+            mLastTransformX = transformX;
+            mLastTransformY = transformY;
+            mLastScaleX = scaleX;
+            mLastGunRotationZ = gunRotationZ;
+            mLastPlayerHp = playerHp;
+            mLastShotOn = shotOn;
+        }
     }
 
     public void SendPlayerDataToNetworkShot()
