@@ -30,8 +30,6 @@ public class MovingPlayer : ICharacterState
                 character.SetState(character.idleState);
             }
         }
-
-       
     }
 
     public void FixedUpdateState(PlayerScript character)

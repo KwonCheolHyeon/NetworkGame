@@ -105,6 +105,7 @@ MonoBehaviour:
   bulletSpeed: 20
   bIsPlayer: 0
   bIsShotOn: 0
+  gunAngle: 0
 --- !u!1 &9147711706872135989
 GameObject:
   m_ObjectHideFlags: 0
@@ -120,7 +121,7 @@ GameObject:
   - component: {fileID: 1002446283933398072}
   m_Layer: 0
   m_Name: Player2
-  m_TagString: Player
+  m_TagString: Wall
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

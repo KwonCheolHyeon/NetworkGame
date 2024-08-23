@@ -17,14 +17,17 @@ public class NetworkManager : MonoBehaviour
         {
             if (instance == null)
             {
+                // 씬에서 NetworkManager 오브젝트를 찾아서 할당
                 instance = FindObjectOfType<NetworkManager>();
+
                 if (instance == null)
                 {
-                    GameObject singletonObject = new GameObject();
-                    instance = singletonObject.AddComponent<NetworkManager>();
-
-                    instance.Start();
+                    Debug.LogError("씬에 NetworkManager 오브젝트가 존재하지 않습니다.");
+                    return null;
                 }
+
+                instance.Initialize();
+                DontDestroyOnLoad(instance.gameObject);
             }
             return instance;
         }
@@ -33,42 +36,70 @@ public class NetworkManager : MonoBehaviour
     private TcpClient client;
     private NetworkStream stream;
     private int playerId;
-
-    private bool bmIsStart;
-
-    private float mTransformX, mTransformY, mScaleX, mGunRotationZ;
-    private int mPlayerHp;
-    private bool bmIsShotOn;
-
-   
-
-    private void Start()
+    private bool isConnected;
+    private void Awake()
     {
-        bmIsStart = false;
-    }
-
-    public void ConnetStart() 
-    {
-        if(!bmIsStart) 
+        // 싱글톤 중복 방지: 동일한 타입의 인스턴스가 이미 존재하면 현재 오브젝트를 파괴
+        if (instance == null)
         {
-            bmIsStart = true;
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+            Initialize();
+        }
+        else if (instance != this)
+        {
+            Destroy(gameObject);
+        }
+
+    }
+    private void Initialize()
+    {
+        isConnected = false;
+    }
+    public void ConnectStart()
+    {
+        if (!isConnected)
+        {
             ConnectToServer();
+            isConnected = true;
         }
     }
 
     private void ConnectToServer()
     {
-        client = new TcpClient(IPandPort.MyIpAddress, IPandPort.MyPortNum);
-        stream = client.GetStream();
+        try
+        {
+            client = new TcpClient(IPandPort.MyIpAddress, IPandPort.MyPortNum);
+            stream = client.GetStream();
 
+            ReceivePlayerId();
+
+            if (playerId < 5)
+            {
+                Debug.Log($"{playerId} ConnectToServer() PlayerSetting playerId값");
+                GameManager.Instance.PlayerSetting(playerId);
+            }
+            else
+            {
+                Debug.LogError($"{playerId} ConnectToServer() playerId값 오류");
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"서버 연결 실패: {e.Message}");
+        }
+    }
+
+    private void ReceivePlayerId()
+    {
         byte[] playerIdBytes = new byte[8];
         int totalBytesRead = 0;
+
         while (totalBytesRead < playerIdBytes.Length)
         {
             int bytesRead = stream.Read(playerIdBytes, totalBytesRead, playerIdBytes.Length - totalBytesRead);
             if (bytesRead == 0)
             {
-                
                 Debug.LogError("ConnectToServer 잘못된 데이터");
                 return;
             }
@@ -80,90 +111,75 @@ public class NetworkManager : MonoBehaviour
 
         if (discriminationCode != 99)
         {
-            Debug.LogError($"discriminationCode : {discriminationCode}  playerId : {playerId}ConnectToServer() discriminationCode값이 다르다");
-        }
-
-        if (playerId < 5)
-        {
-            Debug.Log($"{playerId} ConnectToServer() PlayerSetting playerId값");
-            GameManager.Instance.PlayerSetting(playerId);
-        }
-        else
-        {
-            Debug.LogError($"{playerId} ConnectToServer() playerId값 오류");
+            Debug.LogError($"discriminationCode : {discriminationCode}  playerId : {playerId} ConnectToServer() discriminationCode값이 다르다");
         }
     }
+
 
     private void Update()
     {
 
         if (stream != null && stream.DataAvailable)
         {
-            byte[] buffer = new byte[1024];
-            int bytesRead = stream.Read(buffer, 0, buffer.Length);
-
-
-            if (bytesRead == 0) return;
-   
-            int discriminationCode = BitConverter.ToInt32(buffer, 0);
-            int receivedPlayerId = BitConverter.ToInt32(buffer, 4);
-
-
-            if (discriminationCode == 99) // 99를 받으면 접속 했다는 코드
-            {
-                Debug.Log($"{receivedPlayerId} 플레이어 접속");
-                GameManager.Instance.PlayerSetting(receivedPlayerId);
-            }
-            else
-            {
-                ReceiveMovementData(buffer);
-                Debug.Log($"연결확인 3{discriminationCode} discriminationCode");
-            }
-           
+            HandleIncomingData();
         }
     }
 
-    public void SendMovementData(float tranformX, float transformY, float ScaleX, float GunRotationZ,int playerHp, bool shot)
+    private void HandleIncomingData()
     {
-        mTransformX = tranformX;
-        mTransformY = transformY;
-        mScaleX = ScaleX;
-        mGunRotationZ = GunRotationZ;
-        mPlayerHp = playerHp;
-        bmIsShotOn = shot;
+        byte[] buffer = new byte[1024];
+        int bytesRead = stream.Read(buffer, 0, buffer.Length);
 
+        if (bytesRead == 0) return;
+
+        int discriminationCode = BitConverter.ToInt32(buffer, 0);
+        int receivedPlayerId = BitConverter.ToInt32(buffer, 4);
+
+        if (discriminationCode == 99)
+        {
+            Debug.Log($"{receivedPlayerId} 플레이어 접속");
+            GameManager.Instance.PlayerSetting(receivedPlayerId);
+        }
+        else
+        {
+            ProcessMovementData(buffer);
+            Debug.Log($"연결확인 3{discriminationCode} discriminationCode");
+        }
+    }
+
+    public void SendMovementData(float x, float y, float scaleX, float gunRotationZ, int playerHp, bool isShot)
+    {
         byte[] message = new byte[28];
         Buffer.BlockCopy(BitConverter.GetBytes(playerId), 0, message, 0, 4);
-        Buffer.BlockCopy(BitConverter.GetBytes(mTransformX), 0, message, 4, 4);
-        Buffer.BlockCopy(BitConverter.GetBytes(mTransformY), 0, message, 8, 4);
-        Buffer.BlockCopy(BitConverter.GetBytes(mScaleX), 0, message, 12, 4);
-        Buffer.BlockCopy(BitConverter.GetBytes(mGunRotationZ), 0, message, 16, 4);
-        Buffer.BlockCopy(BitConverter.GetBytes(mPlayerHp), 0, message, 20, 4);
-        message[24] = bmIsShotOn ? (byte)1 : (byte)0;
+        Buffer.BlockCopy(BitConverter.GetBytes(x), 0, message, 4, 4);
+        Buffer.BlockCopy(BitConverter.GetBytes(y), 0, message, 8, 4);
+        Buffer.BlockCopy(BitConverter.GetBytes(scaleX), 0, message, 12, 4);
+        Buffer.BlockCopy(BitConverter.GetBytes(gunRotationZ), 0, message, 16, 4);
+        Buffer.BlockCopy(BitConverter.GetBytes(playerHp), 0, message, 20, 4);
+        message[24] = isShot ? (byte)1 : (byte)0;
 
         stream.Write(message, 0, message.Length);
     }
 
-    private void ReceiveMovementData(byte[] buffer)
+    private void ProcessMovementData(byte[] buffer)
     {
-       
         int receivedPlayerId = BitConverter.ToInt32(buffer, 0);
         float receivedX = BitConverter.ToSingle(buffer, 4);
         float receivedY = BitConverter.ToSingle(buffer, 8);
         float receivedScale = BitConverter.ToSingle(buffer, 12);
-        float gunRotationZ = BitConverter.ToSingle(buffer, 16);
-        int playerHp = BitConverter.ToInt32(buffer, 20);
-        bool mIsShotOn = BitConverter.ToBoolean(buffer, 24);
+        float receivedGunRotationZ = BitConverter.ToSingle(buffer, 16);
+        int receivedPlayerHp = BitConverter.ToInt32(buffer, 20);
+        bool isShotOn = BitConverter.ToBoolean(buffer, 24);
 
-        Debug.Log($"receivedPlayerId : {receivedPlayerId}, receivedX : {receivedX}, receivedY : {receivedY}, receivedScale : {receivedScale}, gunRotationZ : {gunRotationZ}, mIsShotOn : {mIsShotOn}");
+        Debug.Log($"Player ID: {receivedPlayerId}, X: {receivedX}, Y: {receivedY}, Scale: {receivedScale}, Gun Rotation: {receivedGunRotationZ}, Is Shot: {isShotOn}");
 
-        GameManager.Instance.PlayerSYNC(receivedPlayerId, receivedX, receivedY, receivedScale, gunRotationZ, playerHp, mIsShotOn);
+        GameManager.Instance.PlayerSYNC(receivedPlayerId, receivedX, receivedY, receivedScale, receivedGunRotationZ, receivedPlayerHp, isShotOn);
     }
 
     private void OnApplicationQuit()
     {
-        stream.Close();
-        client.Close();
+        stream?.Close();
+        client?.Close();
     }
 
 }

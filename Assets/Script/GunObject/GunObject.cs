@@ -30,6 +30,11 @@ public class GunObject : MonoBehaviour
                 GameManager.Instance.SendPlayerDataToNetworkShot();
             }
         }
+
+        if (playerTransform.gameObject.GetComponent<PlayerScript>().bIsDead) 
+        {
+            this.gameObject.SetActive(false); 
+        }
     }
 
     public void Setting() 

@@ -1,48 +1,39 @@
 using Goldmetal.UndeadSurvivor;
 using System.Collections;
 using System.Collections.Generic;
-using System.Xml;
 using TMPro;
-using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 
 public class PlayerScript : MonoBehaviour
 {
     public ICharacterState currentState {  get; private set; }
-    public ICharacterState idleState { get; private set; }
-    public ICharacterState movingState { get; private set; }
-    public ICharacterState deadState { get; private set; }
+    public ICharacterState idleState = new IdlePlayer();
+    public ICharacterState movingState = new MovingPlayer();
+    public ICharacterState deadState = new DeadPlayer();
     public eGameCharacterType gameType { get; private set; }
-    public Rigidbody2D rb { get; private set; }
-    public Animator animator { get; private set; }
-    public int playerHp { get; private set; }
+    public Rigidbody2D rb;
+    public Animator animator;
+    public int playerHp;
     public int playerID { get; private set; }
-    public bool bIsDead { get; private set; }
-    //������ ���
+    public bool bIsDead;
+    //상대방일 경우
     public Vector3 mPrevVector;
     private Vector3 mTargetPosition;
 
-    private void Awake()
-    {
-        InitializePlayer();
-    }
 
-    private void InitializePlayer()
+    private void Awake()
     {
         gameType = eGameCharacterType.PLAYER;
         playerHp = 100;
-        Animator animator = GetComponent<Animator>();
+        animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
         bIsDead = false;
-        // Initialize states
-        idleState = new IdlePlayer();
-        movingState = new MovingPlayer();
-        deadState = new DeadPlayer();
+
+
     }
-
-
     void Start()
     {
+        
         SetState(idleState);
     }
 
@@ -71,7 +62,8 @@ public class PlayerScript : MonoBehaviour
         
         if (gameType == eGameCharacterType.Enemy)
         {
-            UpdateEnemyPosition();
+            mPrevVector = transform.position;
+            transform.position = Vector2.Lerp(transform.position, mTargetPosition, Time.deltaTime * 10);
         }
         currentState.FixedUpdateState(this);
     }
@@ -101,24 +93,31 @@ public class PlayerScript : MonoBehaviour
 
     private void HandleInput() 
     {
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            SetState(deadState);
+        }
         if(Input.GetKeyDown(KeyCode.R)) 
         {
             SetState(idleState);
         }
     }
-    private void UpdateEnemyPosition()
-    {
-        mPrevVector = transform.position;
-        transform.position = Vector2.Lerp(transform.position, mTargetPosition, Time.deltaTime * 10);
-    }
-
+    
     private void RotatePlayerTowardsMouse()
     {
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mousePosition.z = 0f; // z�� �� �ʱ�ȭ
+        mousePosition.z = 0f; // z축 값이 필요 없으므로 0으로 설정
 
         Vector3 direction = mousePosition - transform.position;
-        transform.localScale = new Vector3(direction.x > 0 ? 1 : -1, 1, 1);
+
+        if (direction.x > 0)
+        {
+            transform.localScale = new Vector3(1, 1, 1); // 오른쪽을 향함
+        }
+        else if (direction.x < 0)
+        {
+            transform.localScale = new Vector3(-1, 1, 1); // 왼쪽을 향함
+        }
     }
 
     public void TakeDamage() 
