@@ -18,7 +18,6 @@ public class GameManager : MonoBehaviour
                 }
 
                 DontDestroyOnLoad(instance.gameObject);
-                instance.Initialize();
             }
             return instance;
         }
@@ -45,7 +44,7 @@ public class GameManager : MonoBehaviour
     private int mLastPlayerHp;
     private bool mLastShotOn;
 
-    private void Initialize()
+    private void Start()
     {
         cameraScript = Camera.main.GetComponent<CameraScript>();
         NetworkManager.Instance.ConnectStart();

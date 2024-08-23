@@ -447,14 +447,14 @@ MonoBehaviour:
     type: 3}
   playerScript: {fileID: 0}
   playerGun: {fileID: 0}
-  otherPlayer: []
-  otherPlayerGun: []
-  playerSpawnTransform:
+  otherPlayerScripts: []
+  otherPlayerGunsScripts: []
+  playerSpawnPoints:
   - {fileID: 177331329}
   - {fileID: 719825102}
   - {fileID: 245490522}
-  - {fileID: 1553574203}
-  cameraObject: {fileID: 0}
+  - {fileID: 0}
+  cameraScript: {fileID: 0}
 --- !u!4 &838553845
 Transform:
   m_ObjectHideFlags: 0

@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class GunObject : MonoBehaviour
@@ -85,7 +84,7 @@ public class GunObject : MonoBehaviour
     {
         canShoot = false; // 발사 불가능 상태로 설정
         Shoot();
-        yield return new WaitForSeconds(0.2f); // 0.1초 대기
+        yield return new WaitForSeconds(0.2f); // 0.2초 대기
         canShoot = true; // 발사 가능 상태로 다시 설정
     }
 
@@ -97,11 +96,6 @@ public class GunObject : MonoBehaviour
 
         // 총알에 힘을 가해 발사
         rb.velocity = firePoint.right * bulletSpeed;
-
-        if (!bIsPlayer)
-        {
-            bIsShotOn = false;
-        }
     }
 
 

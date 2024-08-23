@@ -1,9 +1,4 @@
-using Goldmetal.UndeadSurvivor;
-using System.Collections;
-using System.Collections.Generic;
-using System.Xml;
-using TMPro;
-using Unity.IO.LowLevel.Unsafe;
+
 using UnityEngine;
 
 public class PlayerScript : MonoBehaviour
@@ -31,7 +26,7 @@ public class PlayerScript : MonoBehaviour
     {
         gameType = eGameCharacterType.PLAYER;
         playerHp = 100;
-        Animator animator = GetComponent<Animator>();
+        animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
         bIsDead = false;
         // Initialize states

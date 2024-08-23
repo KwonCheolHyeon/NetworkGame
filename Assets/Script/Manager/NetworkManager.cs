@@ -1,11 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
 using System;
 using System.Net.Sockets;
-using System.Text;
-using System.Numerics;
-using Goldmetal.UndeadSurvivor;
+
 
 
 public class NetworkManager : MonoBehaviour
@@ -26,7 +23,6 @@ public class NetworkManager : MonoBehaviour
                     return null;
                 }
 
-                instance.Initialize();
                 DontDestroyOnLoad(instance.gameObject);
             }
             return instance;
@@ -44,16 +40,11 @@ public class NetworkManager : MonoBehaviour
         {
             instance = this;
             DontDestroyOnLoad(gameObject);
-            Initialize();
         }
         else if (instance != this)
         {
             Destroy(gameObject);
         }
-
-    }
-    private void Initialize()
-    {
         isConnected = false;
     }
     public void ConnectStart()
