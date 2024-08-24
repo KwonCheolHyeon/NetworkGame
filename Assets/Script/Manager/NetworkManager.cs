@@ -1,9 +1,6 @@
-
 using UnityEngine;
 using System;
 using System.Net.Sockets;
-
-
 
 public class NetworkManager : MonoBehaviour
 {
@@ -31,8 +28,8 @@ public class NetworkManager : MonoBehaviour
 
     private TcpClient client;
     private NetworkStream stream;
-    private int playerId;
-    private bool isConnected;
+    private int mPlayerId;
+    private bool bmIsConnected;
     private void Awake()
     {
         // 싱글톤 중복 방지: 동일한 타입의 인스턴스가 이미 존재하면 현재 오브젝트를 파괴
@@ -45,14 +42,14 @@ public class NetworkManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-        isConnected = false;
+        bmIsConnected = false;
     }
     public void ConnectStart()
     {
-        if (!isConnected)
+        if (!bmIsConnected)
         {
             ConnectToServer();
-            isConnected = true;
+            bmIsConnected = true;
         }
     }
 
@@ -60,19 +57,19 @@ public class NetworkManager : MonoBehaviour
     {
         try
         {
-            client = new TcpClient(IPandPort.MyIpAddress, IPandPort.MyPortNum);
+            client = new TcpClient(IPandPort.MyIpAddress, IPandPort.MyPortNum);//내 IP주소, 포트번호
             stream = client.GetStream();
 
             ReceivePlayerId();
 
-            if (playerId < 5)
+            if (mPlayerId < 5)
             {
-                Debug.Log($"{playerId} ConnectToServer() PlayerSetting playerId값");
-                GameManager.Instance.PlayerSetting(playerId);
+                Debug.Log($"{mPlayerId} ConnectToServer() PlayerSetting playerId값");
+                GameManager.Instance.PlayerSetting(mPlayerId);
             }
             else
             {
-                Debug.LogError($"{playerId} ConnectToServer() playerId값 오류");
+                Debug.LogError($"{mPlayerId} ConnectToServer() playerId값 오류");
             }
         }
         catch (Exception e)
@@ -98,11 +95,11 @@ public class NetworkManager : MonoBehaviour
         }
 
         int discriminationCode = BitConverter.ToInt32(playerIdBytes, 0);
-        playerId = BitConverter.ToInt32(playerIdBytes, 4);
+        mPlayerId = BitConverter.ToInt32(playerIdBytes, 4);
 
         if (discriminationCode != 99)
         {
-            Debug.LogError($"discriminationCode : {discriminationCode}  playerId : {playerId} ConnectToServer() discriminationCode값이 다르다");
+            Debug.LogError($"discriminationCode : {discriminationCode}  playerId : {mPlayerId} ConnectToServer() discriminationCode값이 다르다");
         }
     }
 
@@ -138,12 +135,12 @@ public class NetworkManager : MonoBehaviour
         }
     }
 
-    public void SendMovementData(float x, float y, float scaleX, float gunRotationZ, int playerHp, bool isShot)
+    public void SendMovementData(float transformX, float transformY, float scaleX, float gunRotationZ, int playerHp, bool isShot)
     {
         byte[] message = new byte[28];
-        Buffer.BlockCopy(BitConverter.GetBytes(playerId), 0, message, 0, 4);
-        Buffer.BlockCopy(BitConverter.GetBytes(x), 0, message, 4, 4);
-        Buffer.BlockCopy(BitConverter.GetBytes(y), 0, message, 8, 4);
+        Buffer.BlockCopy(BitConverter.GetBytes(mPlayerId), 0, message, 0, 4);
+        Buffer.BlockCopy(BitConverter.GetBytes(transformX), 0, message, 4, 4);
+        Buffer.BlockCopy(BitConverter.GetBytes(transformY), 0, message, 8, 4);
         Buffer.BlockCopy(BitConverter.GetBytes(scaleX), 0, message, 12, 4);
         Buffer.BlockCopy(BitConverter.GetBytes(gunRotationZ), 0, message, 16, 4);
         Buffer.BlockCopy(BitConverter.GetBytes(playerHp), 0, message, 20, 4);

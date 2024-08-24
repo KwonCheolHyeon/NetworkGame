@@ -3,8 +3,8 @@ using UnityEngine;
 
 public class CameraScript : MonoBehaviour
 {
-    public GameObject targetPlayer;
-    public Vector3 offset; 
+    private GameObject mTargetPlayer;
+    private Vector3 mOffset; 
     void Start()
     {
         
@@ -18,17 +18,17 @@ public class CameraScript : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (targetPlayer != null)
+        if (mTargetPlayer != null)
         {
-            transform.position = targetPlayer.transform.position + offset;
+            transform.position = mTargetPlayer.transform.position + mOffset;
         }
     }
 
     public void SettingTarger(GameObject gameObject) 
     {
-        targetPlayer = gameObject;
-        Vector3 camera = new Vector3(targetPlayer.transform.position.x, targetPlayer.transform.position.y, -10.0f);
+        mTargetPlayer = gameObject;
+        Vector3 camera = new Vector3(mTargetPlayer.transform.position.x, mTargetPlayer.transform.position.y, -10.0f);
         transform.position = camera;
-        offset = transform.position - targetPlayer.transform.position;
+        mOffset = transform.position - mTargetPlayer.transform.position;
     }
 }

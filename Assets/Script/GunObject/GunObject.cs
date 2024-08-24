@@ -10,7 +10,7 @@ public class GunObject : MonoBehaviour
     public bool bIsPlayer;
     public bool bIsShotOn;
     public float gunAngle;
-    private bool canShoot; // 발사 가능 여부를 판단하는 변수
+    private bool bmIsCanShoot; // 발사 가능 여부를 판단하는 변수
     void Start()
     {
         Setting();
@@ -23,7 +23,7 @@ public class GunObject : MonoBehaviour
             RotateGunTowardsMouse();
 
             // 스페이스바를 눌렀을 때 총알 발사
-            if (Input.GetKeyDown(KeyCode.Space) && canShoot)
+            if (Input.GetKeyDown(KeyCode.Space) && bmIsCanShoot)
             {
                 StartCoroutine(DelayedShoot());
                 GameManager.Instance.SendPlayerDataToNetworkShot();
@@ -48,7 +48,7 @@ public class GunObject : MonoBehaviour
         {
             bIsPlayer = true;
         }
-        canShoot = true;
+        bmIsCanShoot = true;
     }
 
     void RotateGunTowardsMouse()
@@ -82,10 +82,10 @@ public class GunObject : MonoBehaviour
 
     IEnumerator DelayedShoot()
     {
-        canShoot = false; // 발사 불가능 상태로 설정
+        bmIsCanShoot = false; // 발사 불가능 상태로 설정
         Shoot();
         yield return new WaitForSeconds(0.2f); // 0.2초 대기
-        canShoot = true; // 발사 가능 상태로 다시 설정
+        bmIsCanShoot = true; // 발사 가능 상태로 다시 설정
     }
 
     void Shoot()
@@ -104,7 +104,7 @@ public class GunObject : MonoBehaviour
         transform.rotation = Quaternion.Euler(new Vector3(0, 0, rotatinZ));
         transform.localScale = new Vector3(scaleX, scaleX, 1);
 
-        if (shotOn && canShoot) // 네트워크에서 받은 shotOn 신호 처리
+        if (shotOn && bmIsCanShoot) // 네트워크에서 받은 shotOn 신호 처리
         {
             StartCoroutine(DelayedShoot()); // 즉시 총알 발사
         }
