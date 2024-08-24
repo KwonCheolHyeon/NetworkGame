@@ -3,3 +3,7 @@
 실행방법 :
 1. 게임 서버 먼저 실행
 2. 클라이언트 접속 
+
+
+https://kwonch.tistory.com/267
+https://kwonch.tistory.com/269
