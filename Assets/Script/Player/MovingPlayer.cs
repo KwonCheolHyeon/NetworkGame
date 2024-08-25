@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class MovingPlayer : ICharacterState
 {
-    private Vector2 mMovement;
+   
     private float mMoveSpeed = 5f;
 
     public void EnterState(PlayerScript character)
@@ -37,8 +37,8 @@ public class MovingPlayer : ICharacterState
     }
     private void HandleInput(PlayerScript character)
     {
-        mMovement.x = Input.GetAxis("Horizontal");
-        mMovement.y = Input.GetAxis("Vertical");
+        character.playerVelocity.x = Input.GetAxis("Horizontal");
+        character.playerVelocity.y = Input.GetAxis("Vertical");
 
         if (Input.GetAxis("Horizontal") == 0 && Input.GetAxis("Vertical") == 0)
         {
@@ -48,6 +48,6 @@ public class MovingPlayer : ICharacterState
 
     private void MovePosition(PlayerScript character)
     {
-        character.rb.MovePosition(character.rb.position + mMovement * mMoveSpeed * Time.fixedDeltaTime);
+        character.rb.MovePosition(character.rb.position + character.playerVelocity * mMoveSpeed * Time.fixedDeltaTime);
     }
 }

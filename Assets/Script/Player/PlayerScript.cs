@@ -13,9 +13,15 @@ public class PlayerScript : MonoBehaviour
     public int playerHp { get; private set; }
     public int playerID { get; private set; }
     public bool bIsDead { get; private set; }
+    public Vector2 playerVelocity;
     //상대방일 경우
     public Vector3 mPrevVector;
     private Vector3 mTargetPosition;
+    //플레이어 예측 움직임을 적용하기 위한 추가 변수들
+    private Vector2 predictedPosition;
+    private Vector2 lastReceivedPosition;
+    private float lastReceivedTime;
+    private float interpolationFactor = 0.1f;
 
     private void Awake()
     {
@@ -29,7 +35,7 @@ public class PlayerScript : MonoBehaviour
         animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
         bIsDead = false;
-        // Initialize states
+        
         idleState = new IdlePlayer();
         movingState = new MovingPlayer();
         deadState = new DeadPlayer();
@@ -104,7 +110,11 @@ public class PlayerScript : MonoBehaviour
     private void UpdateEnemyPosition()
     {
         mPrevVector = transform.position;
-        transform.position = Vector2.Lerp(transform.position, mTargetPosition, Time.deltaTime * 10);
+
+        float elapsedTime = Time.time - lastReceivedTime;
+        Vector2 interpolatedPosition = Vector2.Lerp(lastReceivedPosition, predictedPosition, interpolationFactor * elapsedTime);
+
+        transform.position = interpolatedPosition;
     }
 
     private void RotatePlayerTowardsMouse()
@@ -122,11 +132,16 @@ public class PlayerScript : MonoBehaviour
         
     }
 
-    public void UpdateFromNetworkPlayer(float x, float y, float scaleX, int hp)
+    public void UpdateFromNetworkPlayer(float x, float y, float scaleX, int hp, Vector2 serverPosition, Vector2 velocity)
     {
         mTargetPosition = new Vector3(x, y, 0);
         transform.localScale = new Vector3(scaleX, 1, 0);
         playerHp = hp;
+        //플레이어 예측 움직임을 적용하기 위한 추가 변수들
+        lastReceivedPosition = serverPosition;
+        predictedPosition = serverPosition + (velocity * (Time.time - lastReceivedTime));
+        lastReceivedTime = Time.time;
+
     }
 
     public void SetPlayerID(int playerid) 
