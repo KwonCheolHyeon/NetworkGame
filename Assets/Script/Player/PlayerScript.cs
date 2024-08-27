@@ -20,6 +20,7 @@ public class PlayerScript : MonoBehaviour
     //플레이어 예측 움직임을 적용하기 위한 추가 변수들
     private Vector2 predictedPosition;
     private Vector2 lastReceivedPosition;
+    private Vector2 lastReceivedVelocity;
     private float lastReceivedTime;
     private float interpolationFactor = 0.1f;
 
@@ -65,15 +66,20 @@ public class PlayerScript : MonoBehaviour
             SetState(deadState);
             bIsDead = true;
         }
+
+        if (gameType == eGameCharacterType.Enemy)
+        {
+            UpdatePredictedPosition();
+        }
     }
 
     private void FixedUpdate()
     {
         
-        if (gameType == eGameCharacterType.Enemy)
-        {
-            UpdateEnemyPosition();
-        }
+        //if (gameType == eGameCharacterType.Enemy)
+        //{
+        //    UpdateEnemyPosition();
+        //}
         currentState.FixedUpdateState(this);
     }
 
@@ -110,11 +116,7 @@ public class PlayerScript : MonoBehaviour
     private void UpdateEnemyPosition()
     {
         mPrevVector = transform.position;
-
-        float elapsedTime = Time.time - lastReceivedTime;
-        Vector2 interpolatedPosition = Vector2.Lerp(lastReceivedPosition, predictedPosition, interpolationFactor * elapsedTime);
-
-        transform.position = interpolatedPosition;
+        transform.position = Vector2.Lerp(transform.position, mTargetPosition, Time.deltaTime * 20);
     }
 
     private void RotatePlayerTowardsMouse()
@@ -132,16 +134,26 @@ public class PlayerScript : MonoBehaviour
         
     }
 
-    public void UpdateFromNetworkPlayer(float x, float y, float scaleX, int hp, Vector2 serverPosition, Vector2 velocity)
+    public void UpdateFromNetworkPlayer(float serverPredictedPositionX, float serverPredictedPositionY, float velocityX, float velocityY, float scaleX, int php)
     {
-        mTargetPosition = new Vector3(x, y, 0);
-        transform.localScale = new Vector3(scaleX, 1, 0);
-        playerHp = hp;
-        //플레이어 예측 움직임을 적용하기 위한 추가 변수들
-        lastReceivedPosition = serverPosition;
-        predictedPosition = serverPosition + (velocity * (Time.time - lastReceivedTime));
+        
+        lastReceivedPosition = new Vector2(serverPredictedPositionX, serverPredictedPositionY);
+        lastReceivedVelocity = new Vector2(velocityX, velocityY);
         lastReceivedTime = Time.time;
 
+        playerHp = php;
+        transform.localScale = new Vector3(scaleX, 1, 0);
+
+        mTargetPosition = new Vector3(serverPredictedPositionX, serverPredictedPositionY, 0);
+    }
+
+    private void UpdatePredictedPosition()
+    {
+        float timeSinceLastUpdate = Time.time - lastReceivedTime;
+
+        predictedPosition = lastReceivedPosition + lastReceivedVelocity * timeSinceLastUpdate;
+
+        transform.position = Vector2.Lerp(transform.position, predictedPosition, interpolationFactor);
     }
 
     public void SetPlayerID(int playerid) 

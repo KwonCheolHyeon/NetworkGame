@@ -36,13 +36,15 @@ public class GameManager : MonoBehaviour
     
     private int mSpawnIndex = 0;
     private bool bmIsFirstSetting = true;
-
+    private bool bmSendInformation = false;
     //이전 캐릭터 정보 저장
     private Vector3 mLastPosition;
     private float mLastScaleX;
     private float mLastGunRotationZ;
     private int mLastPlayerHp;
     private bool mLastShotOn;
+    private float mLastVelocityX;
+    private float mLastVelocityY;
 
     private void Start()
     {
@@ -57,9 +59,10 @@ public class GameManager : MonoBehaviour
             SetCameraTarget();
         }
 
-        if (playerScript != null && playerScript.gameType == eGameCharacterType.PLAYER && otherPlayerScripts.Count > 0)
+        if (playerScript != null && playerScript.gameType == eGameCharacterType.PLAYER && otherPlayerScripts.Count > 0 && !bmSendInformation)
         {
-            SendPlayerDataToNetwork();
+            bmSendInformation = true;
+            InvokeRepeating("SendPlayerDataToNetwork", 0f, 0.1f);
         }
     }
 
@@ -126,12 +129,12 @@ public class GameManager : MonoBehaviour
         mSpawnIndex++;
     }
 
-    public void PlayerSYNC(int playerId, float transformX, float transformY, float scaleX, float gunRotationZ, int playerHp, bool shotOn)
+    public void PlayerSYNC(int playerId, float transformX, float transformY, float scaleX, float gunRotationZ, int playerHp, bool shotOn, float velocityX, float velocityY)
     {
         PlayerScript otherPlayer = otherPlayerScripts.Find(p => p.playerID == playerId);
         if (otherPlayer != null)
         {
-            otherPlayer.UpdateFromNetworkPlayer(transformX, transformY, scaleX, playerHp);
+            otherPlayer.UpdateFromNetworkPlayer(transformX, transformY, velocityX, velocityY, scaleX, playerHp);
             otherPlayerGunsScripts[otherPlayerScripts.IndexOf(otherPlayer)].UpdateFromNetworkGunObject(gunRotationZ, scaleX, shotOn);
         }
     }
@@ -143,11 +146,13 @@ public class GameManager : MonoBehaviour
         float currentGunRotationZ = playerGun.gunAngle;
         int currentPlayerHp = playerScript.playerHp;
         bool shotOn = false;
+        float velocityX = playerScript.playerVelocity.x;
+        float velocityY = playerScript.playerVelocity.y;
 
-        if (HasPlayerDataChanged(currentPosition, currentScaleX, currentGunRotationZ, currentPlayerHp, shotOn))
+        if (HasPlayerDataChanged(currentPosition, currentScaleX, currentGunRotationZ, currentPlayerHp, shotOn, velocityX, velocityY))
         {
-            NetworkManager.Instance.SendMovementData(currentPosition.x, currentPosition.y, currentScaleX, currentGunRotationZ, currentPlayerHp, shotOn);
-            SaveCurrentPlayerData(currentPosition, currentScaleX, currentGunRotationZ, currentPlayerHp, shotOn);
+            NetworkManager.Instance.SendMovementData(currentPosition.x, currentPosition.y, currentScaleX, currentGunRotationZ, currentPlayerHp, shotOn, velocityX, velocityY);
+            SaveCurrentPlayerData(currentPosition, currentScaleX, currentGunRotationZ, currentPlayerHp, shotOn, velocityX, velocityY);
         }
     }
 
@@ -158,22 +163,25 @@ public class GameManager : MonoBehaviour
         float currentGunRotationZ = playerGun.gunAngle;
         int currentPlayerHp = playerScript.playerHp;
         bool shotOn = true;
-
-        NetworkManager.Instance.SendMovementData(currentPosition.x, currentPosition.y, currentScaleX, currentGunRotationZ, currentPlayerHp, shotOn);
+        float velocityX = playerScript.playerVelocity.x;
+        float velocityY = playerScript.playerVelocity.y;
+        NetworkManager.Instance.SendMovementData(currentPosition.x, currentPosition.y, currentScaleX, currentGunRotationZ, currentPlayerHp, shotOn, velocityX, velocityY);
     }
 
-    private bool HasPlayerDataChanged(Vector3 position, float scaleX, float gunRotationZ, int playerHp, bool shotOn)//데이터 바뀐게 있는지 체크
+    private bool HasPlayerDataChanged(Vector3 position, float scaleX, float gunRotationZ, int playerHp, bool shotOn, float velocityX, float velocityY)//데이터 바뀐게 있는지 체크
     {
-        return position != mLastPosition || scaleX != mLastScaleX || gunRotationZ != mLastGunRotationZ || playerHp != mLastPlayerHp || shotOn != mLastShotOn;
+        return position != mLastPosition || scaleX != mLastScaleX || gunRotationZ != mLastGunRotationZ || playerHp != mLastPlayerHp || shotOn != mLastShotOn || velocityX != mLastVelocityX || velocityY != mLastVelocityY;
     }
 
-    private void SaveCurrentPlayerData(Vector3 position, float scaleX, float gunRotationZ, int playerHp, bool shotOn)//이전 정보 저장
+    private void SaveCurrentPlayerData(Vector3 position, float scaleX, float gunRotationZ, int playerHp, bool shotOn, float velocityX, float velocityY)//이전 정보 저장
     {
         mLastPosition = position;
         mLastScaleX = scaleX;
         mLastGunRotationZ = gunRotationZ;
         mLastPlayerHp = playerHp;
         mLastShotOn = shotOn;
+        mLastVelocityX = velocityX;
+        mLastVelocityY = velocityY;
     }
 
     private void SetCameraTarget()
